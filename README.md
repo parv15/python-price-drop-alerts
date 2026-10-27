@@ -2,7 +2,7 @@
   <img src="docs/banner.svg" alt="Price drop alerts for Python: a product card with its price, a falling price graph and a dashed target line, sent with Mailtrap" width="100%">
 </p>
 
-# Price Drop and Back-in-Stock Email Alerts in Python (Mailtrap)
+# Price Drop and Back-in-Stock Email Alerts with Python and GitHub Actions
 
 A free price tracker that runs on GitHub Actions: list the products you care about in a YAML file and get one email when the price drops or the item is back in stock. Written in Python 3.12, it reads schema.org product data, remembers what it already told you, and sends alerts through the Mailtrap Email API. A local dashboard shows every price on a graph. Use it as a Python price tracker, a back-in-stock notifier or a web scraping alert template: no server, no database and no paid service, just a GitHub Actions cron job and transactional email.
 
