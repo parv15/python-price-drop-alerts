@@ -1,0 +1,45 @@
+# watchlist.yaml: everything except the Mailtrap API token lives here.
+#
+# 1. Set settings.from_email to an address on a domain you verified in Mailtrap
+#    (Sending Domains). For a quick start, use alerts@demomailtrap.co: Mailtrap's demo
+#    domain delivers only to your own Mailtrap account email.
+#    Gmail/Yahoo/etc. addresses can't be used as the sender.
+# 2. Set default_recipients to where alerts should go.
+# 3. Replace the example item with the products you want to watch.
+#
+# On the first run the tool records each price. You get an email when the price is at
+# or below target_price (so set target_price above the current price to test right away),
+# and when an out-of-stock item comes back.
+
+settings:
+  from_email: alerts@demomailtrap.co  # Mailtrap demo domain: delivers only to the account owner
+  from_name: Price Alerts
+  default_recipients: [sid@infrasity.com]
+  request_delay_seconds: 5            # delay between requests to the same host
+  timeout_seconds: 20
+  respect_robots_txt: true
+  digest: false                       # daily summary email; the DIGEST env var overrides this
+
+items:
+  # A demo product on books.toscrape.com, a site built for scraping practice.
+  # It has no schema.org JSON-LD, so the CSS selectors below do the work.
+  # The price is £51.77; set target_price above that to receive a test alert.
+  - name: A Light in the Attic
+    url: https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html
+    selector: ".product_main .price_color"
+    stock_selector: ".product_main .availability"
+    out_of_stock_text: ["out of stock", "unavailable"]
+    target_price: 60.00
+    notify_on: [price_below, back_in_stock]
+
+  # Full example with every option. Most shops publish schema.org Product data,
+  # so `url` and `target_price` are often enough; selectors are only a fallback.
+  #
+  # - name: Example Headphones                     # unique; its slug is the id in data/state.json
+  #   url: https://example.com/product/123          # http(s) only
+  #   selector: ".price"                            # optional CSS fallback for the price
+  #   stock_selector: ".availability"               # optional CSS for the stock text
+  #   out_of_stock_text: ["out of stock", "sold out"]  # optional, matched case-insensitively
+  #   target_price: 199.99                          # email when the price is at or below this
+  #   notify_on: [price_below, back_in_stock]
+  #   recipients: [you@example.com]                 # optional, falls back to default_recipients

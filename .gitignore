@@ -1,0 +1,9 @@
+out/
+.env
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+watchlist.yaml.bak
+data/

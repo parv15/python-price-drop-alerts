@@ -1,0 +1,65 @@
+name: Price alerts
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # every 6 hours, off the hour
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: check prices and build emails, but send nothing and don't update data/"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: price-alerts
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check prices and send alerts
+        env:
+          MAILTRAP_API_TOKEN: ${{ secrets.MAILTRAP_API_TOKEN }}
+          DIGEST: ${{ vars.DIGEST }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: python -m price_alerts
+
+      # Runs even when some emails failed (exit code 2) so the alerts that did go
+      # out are recorded and not sent twice. Unchanged prices produce no diff.
+      - name: Commit updated price data
+        if: ${{ !cancelled() && inputs.dry_run != true }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/; then
+            echo "No price or state changes."
+            exit 0
+          fi
+          git add data/
+          git commit -m "chore: update price data [skip ci]"
+          git pull --rebase --autostash
+          git push
+
+      - name: Upload email previews
+        if: ${{ !cancelled() && inputs.dry_run == true }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: email-previews
+          path: out/
+          if-no-files-found: ignore
