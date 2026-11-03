@@ -2,7 +2,7 @@
 # `python -m price_alerts` works from the repo root.
 httpx==0.28.1
 selectolax==1.0.0
-pydantic==2.14.1
+pydantic==2.14.2
 PyYAML==6.0.3
 mailtrap==2.11.0
 -e .
