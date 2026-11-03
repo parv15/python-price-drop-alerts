@@ -466,6 +466,56 @@ python -m price_alerts [--watchlist watchlist.yaml] [--data-dir data] [--dry-run
 - **Exit codes:** `0` OK (failed product checks don't change it), `1` config error, `2` at least one email failed to send.
 - **`.env`** is read only if it exists, never overrides real environment variables, and its values are never printed. It's git-ignored.
 
+## Run with Docker
+
+Docker Compose can run the dashboard without installing Python locally:
+
+```bash
+cp .env.example .env
+docker compose up
+```
+
+Open **http://localhost:8765**. The first run builds the image. Both services run
+as the same non-root user, and the dashboard is published only on the loopback
+interface because it has no login. The dashboard works without a Mailtrap token:
+add products and use **Check now** to record prices while alerts are held back.
+To send alerts, configure the sender and recipients in `watchlist.yaml` before
+the first start and put `MAILTRAP_API_TOKEN` in `.env` as described above.
+
+The checker runs only when explicitly requested:
+
+```bash
+docker compose --profile check run --rm check
+# Without a token, preview alerts without changing state/history:
+docker compose --profile check run --rm check --dry-run
+```
+
+There is no scheduler in Compose; scheduled checks stay in the GitHub Actions
+workflow. Avoid running the checker while **Check now** is already in progress.
+
+Both services share two Docker-managed volumes:
+
+- `watchlist` holds `/workspace/watchlist.yaml`, its backup and dry-run previews.
+  A new volume is seeded from the image's initial `watchlist.yaml` only once.
+  The whole directory is mounted so the dashboard can atomically replace the
+  watchlist when adding or editing products.
+- `data` holds `/workspace/data/state.json` and `history.csv`.
+
+Dashboard edits change the volume's watchlist, not the file in your checkout.
+Rebuilding the image does not overwrite an existing volume. To import a changed
+local watchlist, stop any running checks, then replace the volume's copy:
+
+```bash
+docker compose stop dashboard
+docker compose cp watchlist.yaml dashboard:/workspace/watchlist.yaml
+docker compose start dashboard
+```
+
+`docker compose down` followed by `docker compose up` keeps both volumes and their
+data. `docker compose down --volumes` removes them. After changing source or
+dependencies, use `docker compose up --build` to rebuild the image. `.env`, tests,
+local data and development tools are excluded from the runtime image.
+
 ## Data files
 
 Both files are committed by the workflow as `github-actions[bot]` with `chore: update price data [skip ci]`, and only when something changed.

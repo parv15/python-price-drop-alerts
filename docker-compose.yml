@@ -1,0 +1,27 @@
+x-app: &app
+  build: .
+  init: true
+  env_file: .env
+  volumes:
+    # Mount the directory: the dashboard atomically replaces watchlist.yaml.
+    - watchlist:/workspace
+    - data:/workspace/data
+
+services:
+  dashboard:
+    <<: *app
+    command: ["ui", "--host", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:8765:8765"
+
+  check:
+    <<: *app
+    profiles: ["check"]
+    # Nonempty arguments also override the image's UI command in compose run.
+    command: ["--watchlist", "watchlist.yaml"]
+    healthcheck:
+      disable: true
+
+volumes:
+  watchlist:
+  data:

@@ -1,0 +1,14 @@
+# Only the production package, build metadata and initial watchlist enter the build.
+*
+!Dockerfile
+!requirements.txt
+!pyproject.toml
+!README.md
+!LICENSE
+!src/
+!src/**
+!watchlist.yaml
+
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
